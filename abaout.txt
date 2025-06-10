@@ -1,0 +1,80 @@
+ # Django Multi-Tenant E-commerce Application
+
+This is a multi-tenant e-commerce application built with Django and Django Tenants. It allows multiple tenants (clients) to have their own isolated instances of the application, each with its own database and data.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- Python 3.8 or later
+- Django 3.2 or later
+- PostgreSQL 12 or later
+- Cloudinary account
+
+## Installation
+
+1. Clone the repository:
+
+```
+git clone https://github.com/your-username/django-multi-tenant-e-commerce.git
+```
+
+2. Create a virtual environment and activate it:
+
+```
+python3 -m venv venv
+source venv/bin/activate
+```
+
+3. Install the required Python packages:
+
+```
+pip install -r requirements.txt
+```
+
+4. Create a `.env` file in the project root directory and add the following environment variables:
+
+```
+API_SECRET_KEY=your_secret_key
+ENGINE_DB=django.db.backends.postgresql
+NAME_DB=your_database_name
+USER_DB=your_database_user
+PASSWORD_DB=your_database_password
+HOST_DB=localhost
+PORT_DB=5432
+NAME_CD=your_cloudinary_cloud_name
+APY_KEY_CD=your_cloudinary_api_key
+APY_SECRET_CD=your_cloudinary_api_secret
+```
+
+5. Run the migrations:
+
+```
+python manage.py migrate
+```
+
+6. Create a superuser account:
+
+```
+python manage.py createsuperuser
+```
+
+## Usage
+
+To start the development server, run:
+
+```
+python manage.py runserver
+```
+
+The application will be available at `http://localhost:8000`.
+
+## Features
+
+The application includes the following features:
+
+- Multi-tenancy: Each tenant has its own isolated instance of the application, with its own database and data.
+- Authentication and authorization: Users can register and log in to the application. Access to certain features is restricted based on user roles and permissions.
+- Product management: Tenants can add, edit, and delete products.
+- Order management: Tenants can view, process, and fulfill orders.
+- Inventory management: Tenants can track their inventory levels and reorder.
