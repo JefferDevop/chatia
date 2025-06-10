@@ -21,11 +21,7 @@ SHARED_APPS = (
     'tenants',
     # "admin_interface",
     'django.contrib.contenttypes',
-    'django.contrib.auth',
-    'django.contrib.sessions',
-    'django.contrib.admin',
-    'accounts',
-    'appAdmin'
+   
     
 )
 
@@ -53,7 +49,7 @@ INSTALLED_APPS = list(SHARED_APPS) + \
 
 
 MIDDLEWARE = [
-    # 'django_tenants.middleware.main.TenantMainMiddleware',
+    'django_tenants.middleware.main.TenantMainMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
