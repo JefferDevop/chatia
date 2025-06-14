@@ -6,6 +6,10 @@ import json
 # @csrf_exempt
 def whatsapp_webhook(request):
     if request.method == 'GET':
+        # Verificación del webhook de WhatsApp
+        print("GET request received for WhatsApp webhook")
+        print("Request GET parameters:", request.GET)
+        
         mode = request.GET.get('hub.mode')
         token = request.GET.get('hub.verify_token')
         challenge = request.GET.get('hub.challenge')
