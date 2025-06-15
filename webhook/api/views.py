@@ -19,6 +19,8 @@ def whatsapp_webhook(request):
     if request.method == 'POST':
         data = json.loads(request.body)
 
+        print("Datos recibidos:", data)
+
         # Extrae datos del mensaje (ajusta esto según el payload real)
         try:
             entry = data['entry'][0]
