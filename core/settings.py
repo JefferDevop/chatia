@@ -40,8 +40,10 @@ TENANT_APPS = (
     'corsheaders',
     'colorfield',
     'django_filters',    
+    'channels',
+    'webhook',
     'accounts',
-    'appAdmin'
+    'appAdmin',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + \
@@ -96,6 +98,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'core.asgi.application'
 WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
@@ -108,6 +111,8 @@ DATABASES = {
         'PORT': config('PORT_DB'),
     }
 }
+
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {

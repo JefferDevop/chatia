@@ -1,5 +1,4 @@
 from django.contrib import admin
-from .models import Agent, Tag
 # from django.utils.translation import gettext_lazy as _
 from django.apps import apps
 
