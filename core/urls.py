@@ -13,10 +13,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from appAdmin.api.router import router as crm_router
-
-
-from webhook.api.views import whatsapp_webhook
-
+from webhook.api import router as router_webhook
+# from webhook.api.router import router_webhook
 
 
 
@@ -43,7 +41,7 @@ urlpatterns = [
     path('api/', include('accounts.api.router')),
     path('api/', include(router_user.urls)),
     path('api/', include(crm_router.urls)),
-     path('webhooks/', whatsapp_webhook, name='whatsapp-webhook'),
+    path('api/', include(router_webhook)),
 
 
     # ---------------------------------------------------------------------

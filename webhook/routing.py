@@ -5,3 +5,4 @@ from . import consumers
 websocket_urlpatterns = [
     path("ws/whatsapp/", consumers.WhatsAppConsumer.as_asgi()),
 ]
+

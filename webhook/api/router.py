@@ -1,12 +1,8 @@
 # app_whatsapp/urls.py
-
-
-
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import WhatsAppWebhookViewSet
+from .views import WhatsAppWebhookAPIView, test_enviar_template
 
-
-router_webhook = DefaultRouter()
-router_webhook.register('webhooks', WhatsAppWebhookViewSet)
-
+urlpatterns = [
+    path('webhook/', WhatsAppWebhookAPIView.as_view(), name='whatsapp_webhook'),
+    path('test/send-template/', test_enviar_template, name='test_send_template'),
+]
