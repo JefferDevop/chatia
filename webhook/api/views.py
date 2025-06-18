@@ -18,6 +18,9 @@ from ..whatsapp_utils import enviar_mensaje_template
 class WhatsAppWebhookAPIView(APIView):
     authentication_classes = []  # ← Opcional: evita autenticación
     permission_classes = [] # ← Opcional: evita permisos
+
+    print("🔔 WhatsAppWebhookAPIView cargada")
+    
     def get(self, request):     
         if request.method == 'GET':
             mode = request.GET.get('hub.mode')
