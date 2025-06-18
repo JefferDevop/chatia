@@ -19,9 +19,12 @@ class WhatsAppWebhookAPIView(APIView):
     authentication_classes = []  # ← Opcional: evita autenticación
     permission_classes = [] # ← Opcional: evita permisos
 
-    print("🔔 WhatsAppWebhookAPIView cargada")
     
-    def get(self, request):     
+
+    def get(self, request): 
+
+        print("🔔 WhatsAppWebhookAPIView cargada", request)
+            
         if request.method == 'GET':
             mode = request.GET.get('hub.mode')
             token = request.GET.get('hub.verify_token')
