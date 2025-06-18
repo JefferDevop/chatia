@@ -1,5 +1,6 @@
 # views.py
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from django.http import JsonResponse
 from channels.layers import get_channel_layer
@@ -13,7 +14,7 @@ from ..whatsapp_utils import enviar_mensaje_template
 
 
 
-
+@method_decorator(csrf_exempt, name='dispatch')
 class WhatsAppWebhookAPIView(APIView):
     authentication_classes = []  # ← Opcional: evita autenticación
     permission_classes = [] # ← Opcional: evita permisos
@@ -99,8 +100,6 @@ class WhatsAppWebhookAPIView(APIView):
                                     category=category,
                                     pricing_model=pricing_model
                                 )
-
-
 
 
                             async_to_sync(channel_layer.group_send)(
