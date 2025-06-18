@@ -183,11 +183,14 @@ CELERY_TASK_ROUTES = {
     'core.tasks.send_whatsapp_message': {'queue': 'default'},
 }
 
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('localhost', 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
         },
     },
 }

@@ -127,10 +127,23 @@ class WhatsAppWebhookAPIView(APIView):
 
 @csrf_exempt
 def test_enviar_template(request):
-    """Vista para enviar un mensaje con plantilla desde el navegador o frontend"""
+    """Vista para enviar un mensaje con plantilla que tiene imagen en el encabezado"""
+
     wa_id = "573005309990"
-    template_name = "recordatorio_cita"
+    template_name = "plantilla_demo"
+
     components = [
+        {
+            "type": "header",
+            "parameters": [
+                {
+                    "type": "image",
+                    "image": {
+                        "link": "https://r-charts.com/es/miscelanea/procesamiento-imagenes-magick_files/figure-html/importar-imagen-r.png"
+                    }
+                }
+            ]
+        },
         {
             "type": "body",
             "parameters": [
@@ -139,10 +152,9 @@ def test_enviar_template(request):
             ]
         }
     ]
+
     resultado = enviar_mensaje_template(wa_id, template_name, "es", components)
     return JsonResponse(resultado)
-
-
 
 
 
