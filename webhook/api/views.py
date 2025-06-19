@@ -31,7 +31,13 @@ class WhatsAppWebhookAPIView(APIView):
 
             print("🔔 WhatsAppWebhookAPIView cargada")
             print("🔍 Headers:", request.headers)
+            print("----------------------------------------------")
+            print("📦 Query Params:", request.query_params)
+            print("📦 GET Params:", request.GET)
+            print("📩 GET Params (dict):", request.GET.dict())
             print("📩 GET Params:", request.GET.dict())
+            print("-----------------body-----------------------------")
+            print("📩 Body:", request.body)              # sin procesar (bytes)
 
 
             mode = request.GET.get('hub.mode')
@@ -45,7 +51,9 @@ class WhatsAppWebhookAPIView(APIView):
 
             print("🔔 WhatsAppWebhookAPIView recibió POST")
             print("🔍 Headers:", request.headers)
-            print("📩 Body:", request.body)              # sin procesar (bytes)
+            print("-------------------body---------------------------")
+            print("📩 Body:", request.body)    
+            print("----------------DATA--------------------")          # sin procesar (bytes)
             print("📦 JSON:", request.data) 
 
 
