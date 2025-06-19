@@ -41,7 +41,7 @@ urlpatterns = [
     path('api/', include('accounts.api.router')),
     path('api/', include(router_user.urls)),
     path('api/', include(crm_router.urls)),
-    path('', include(router_webhook)),
+    path('api/', include(router_webhook)),
 
 
     # ---------------------------------------------------------------------
