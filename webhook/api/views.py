@@ -23,9 +23,17 @@ class WhatsAppWebhookAPIView(APIView):
 
     def get(self, request): 
 
-        print("🔔 WhatsAppWebhookAPIView cargada", request)
-            
+       
+
+       
+
         if request.method == 'GET':
+
+            print("🔔 WhatsAppWebhookAPIView cargada")
+            print("🔍 Headers:", request.headers)
+            print("📩 GET Params:", request.GET.dict())
+
+
             mode = request.GET.get('hub.mode')
             token = request.GET.get('hub.verify_token')
             challenge = request.GET.get('hub.challenge')
@@ -34,6 +42,13 @@ class WhatsAppWebhookAPIView(APIView):
             return JsonResponse({}, status=403)
 
         if request.method == 'POST':
+
+            print("🔔 WhatsAppWebhookAPIView recibió POST")
+            print("🔍 Headers:", request.headers)
+            print("📩 Body:", request.body)              # sin procesar (bytes)
+            print("📦 JSON:", request.data) 
+
+
             try:
                 data = json.loads(request.body)
                 print("Datos recibidos:", data)
