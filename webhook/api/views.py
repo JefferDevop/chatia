@@ -1,5 +1,6 @@
 # views.py
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import AllowAny
 from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from django.http import JsonResponse
@@ -9,128 +10,117 @@ from datetime import datetime
 import pytz
 import json
 from ..models import WhatsAppMessage, WhatsAppContact, WhatsAppMessageStatus
+
 from ..whatsapp_utils import enviar_mensaje_template
 
 
-
-
-@method_decorator(csrf_exempt, name='dispatch')
+# @method_decorator(csrf_exempt, name='dispatch')
 class WhatsAppWebhookAPIView(APIView):
-    authentication_classes = []  # ← Opcional: evita autenticación
-    permission_classes = [] # ← Opcional: evita permisos
+    authentication_classes = []
+    permission_classes = [AllowAny]
 
-    
+    def get(self, request):
+        print("\ud83d\udd14 WhatsAppWebhookAPIView cargada")
+        print("\ud83d\udd0d Headers:", dict(request.headers))
+        print("\ud83d\udcc6 Query Params:", request.query_params)
+        print("\ud83d\udcc6 GET Params:", request.GET.dict())
+        print("\ud83d\udce9 Raw Body (GET):", request.body)
 
-    def get(self, request): 
+        mode = request.GET.get('hub.mode')
+        token = request.GET.get('hub.verify_token')
+        challenge = request.GET.get('hub.challenge')
 
-       
+        if mode == 'subscribe' and token == 'demo':
+            return JsonResponse({'hub.challenge': challenge})
+        return JsonResponse({}, status=403)
 
-       
+    def post(self, request):
+        print("\ud83d\udd14 WhatsAppWebhookAPIView recibi\xf3 POST")
+        print("\ud83d\udd0d Headers:", dict(request.headers))
+        print("\ud83d\udce9 Raw Body:", request.body)
+        print("\ud83d\udcc6 JSON:", request.data)
 
-        if request.method == 'GET':
+        try:
+            data = request.data
+            channel_layer = get_channel_layer()
 
-            print("🔔 WhatsAppWebhookAPIView cargada")
-            print("🔍 Headers:", request.headers)
-            print("----------------------------------------------")
-            print("📦 Query Params:", request.query_params)
-            print("📦 GET Params:", request.GET)
-            print("📩 GET Params (dict):", request.GET.dict())
-            print("📩 GET Params:", request.GET.dict())
-            print("-----------------body-----------------------------")
-            print("📩 Body:", request.body)              # sin procesar (bytes)
+            for entry in data.get('entry', []):
+                for change in entry.get('changes', []):
+                    value = change.get('value', {})
 
+                    # \ud83d\udfe2 Mensaje entrante
+                    if 'messages' in value:
+                        message_data = value['messages'][0]
+                        wa_id = message_data['from']
+                        texto = message_data['text']['body']
+                        timestamp = message_data['timestamp']
+                        sender_name = value['contacts'][0]['profile']['name']
 
-            mode = request.GET.get('hub.mode')
-            token = request.GET.get('hub.verify_token')
-            challenge = request.GET.get('hub.challenge')
-            if mode == 'subscribe' and token == 'demo':
-                return JsonResponse({'hub.challenge': challenge})
-            return JsonResponse({}, status=403)
+                        # Guardar mensaje
+                        WhatsAppMessage.objects.create(
+                            wa_id=wa_id,
+                            sender_name=sender_name,
+                            body=texto,
+                            timestamp=timestamp,
+                            direction='IN'
+                        )
 
-        if request.method == 'POST':
+                        # \ud83d\udd35 Actualizar contacto
+                        contacto, creado = WhatsAppContact.objects.get_or_create(
+                            wa_id=wa_id,
+                            defaults={"nombre": sender_name}
+                        )
+                        contacto.last_interaction = datetime.fromtimestamp(int(timestamp), tz=pytz.UTC)
+                        contacto.save()
 
-            print("🔔 WhatsAppWebhookAPIView recibió POST")
-            print("🔍 Headers:", request.headers)
-            print("-------------------body---------------------------")
-            print("📩 Body:", request.body)    
-            print("----------------DATA--------------------")          # sin procesar (bytes)
-            print("📦 JSON:", request.data) 
-
-
-            try:
-                data = json.loads(request.body)
-                print("Datos recibidos:", data)
-
-                channel_layer = get_channel_layer()
-
-                for entry in data.get('entry', []):
-                    for change in entry.get('changes', []):
-                        value = change.get('value', {})
-
-                        # 🟢 Mensaje entrante
-                        if 'messages' in value:
-                            message_data = value['messages'][0]
-                            wa_id = message_data['from']
-                            texto = message_data['text']['body']
-                            timestamp = message_data['timestamp']
-                            sender_name = value['contacts'][0]['profile']['name']
-
-                            # Guardar en base de datos
-                            WhatsAppMessage.objects.create(
-                                wa_id=wa_id,
-                                sender_name=sender_name,
-                                body=texto,
-                                timestamp=timestamp,
-                                direction='IN'
-                            )
-
-                            # Enviar evento al frontend
-                            async_to_sync(channel_layer.group_send)(
-                                "whatsapp_updates",
-                                {
-                                    "type": "send_whatsapp_event",
-                                    "data": {
-                                        "event": "new_message",
-                                        "wa_id": wa_id,
-                                        "sender_name": sender_name,
-                                        "body": texto,
-                                        "timestamp": timestamp
-                                    }
+                        # Enviar al frontend
+                        async_to_sync(channel_layer.group_send)(
+                            "whatsapp_updates",
+                            {
+                                "type": "send_whatsapp_event",
+                                "data": {
+                                    "event": "new_message",
+                                    "wa_id": wa_id,
+                                    "sender_name": sender_name,
+                                    "body": texto,
+                                    "timestamp": timestamp
                                 }
+                            }
+                        )
+
+                    # \ud83d\udfe1 Estados (delivered, read)
+                    elif 'statuses' in value:
+                        for status_info in value['statuses']:
+                            msg_id = status_info['id']
+                            status = status_info['status']
+                            raw_timestamp = int(status_info['timestamp'])
+                            timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC)
+                            wa_id = status_info['recipient_id']
+
+                            # Datos opcionales
+                            conversation_id = status_info.get('conversation', {}).get('id')
+                            category = status_info.get('pricing', {}).get('category')
+                            pricing_model = status_info.get('pricing', {}).get('pricing_model')
+
+                            WhatsAppMessageStatus.objects.create(
+                                message_id=msg_id,
+                                wa_id=wa_id,
+                                status=status,
+                                timestamp=timestamp,
+                                conversation_id=conversation_id,
+                                category=category,
+                                pricing_model=pricing_model
                             )
 
-                        # 🟡 Estado de mensaje (delivered, read, etc.)
-                        elif 'statuses' in value:
-                            status_data = value['statuses'][0]
-                            wa_id = status_data['recipient_id']
-                            msg_id = status_data['id']
-                            status = status_data['status']
-                            timestamp = status_data['timestamp']
+                            # \ud83d\udd35 Actualizar contacto si existe
+                            try:
+                                contacto = WhatsAppContact.objects.get(wa_id=wa_id)
+                                contacto.last_interaction = timestamp
+                                contacto.save()
+                            except WhatsAppContact.DoesNotExist:
+                                pass
 
-                            # Aquí podrías actualizar el estado en tu modelo si lo necesitas
-
-                            # Procesar status update
-                            for status_info in status_data:
-                                msg_id = status_info['id']
-                                status = status_info['status']
-                                timestamp = datetime.fromtimestamp(int(status_info['timestamp']), tz=pytz.UTC)
-                                wa_id = status_info['recipient_id']
-
-                                conversation_id = status_info.get('conversation', {}).get('id')
-                                category = status_info.get('pricing', {}).get('category')
-                                pricing_model = status_info.get('pricing', {}).get('pricing_model')
-
-                                WhatsAppMessageStatus.objects.create(
-                                    message_id=msg_id,
-                                    wa_id=wa_id,
-                                    status=status,
-                                    timestamp=timestamp,
-                                    conversation_id=conversation_id,
-                                    category=category,
-                                    pricing_model=pricing_model
-                                )
-
-
+                            # Enviar al frontend
                             async_to_sync(channel_layer.group_send)(
                                 "whatsapp_updates",
                                 {
@@ -140,16 +130,18 @@ class WhatsAppWebhookAPIView(APIView):
                                         "wa_id": wa_id,
                                         "status": status,
                                         "message_id": msg_id,
-                                        "timestamp": timestamp
+                                        "timestamp": raw_timestamp
                                     }
                                 }
                             )
 
-                return JsonResponse({'status': 'ok'}, status=200)
+            return JsonResponse({'status': 'ok'}, status=200)
 
-            except Exception as e:
-                print("❌ Error al procesar mensaje:", str(e))
-                return JsonResponse({'error': 'Formato no válido'}, status=400)
+        except Exception as e:
+            print("\u274c Error al procesar mensaje:", str(e))
+            return JsonResponse({'error': 'Formato no v\xe1lido'}, status=400)
+
+
             
 
 

@@ -23,7 +23,7 @@ def enviar_mensaje_template(wa_id, template_name, language_code="es", components
 
     access_token = config('WHATSAPP_TOKEN')
     phone_number_id = config('WHATSAPP_PHONE_NUMBER_ID')
-    url = f'https://graph.facebook.com/v18.0/{phone_number_id}/messages'
+    url = f'https://graph.facebook.com/v23.0/{phone_number_id}/messages'
 
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -45,6 +45,7 @@ def enviar_mensaje_template(wa_id, template_name, language_code="es", components
 
     response = requests.post(url, headers=headers, json=payload)
     response_data = response.json()
+    
     print("➡️ Respuesta de WhatsApp API:", response_data)
 
     if response.status_code == 200:
