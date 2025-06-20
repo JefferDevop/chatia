@@ -55,7 +55,7 @@ class WhatsAppWebhookAPIView(APIView):
                             sender_name=sender_name,
                             message_body=texto,
                             created_at=timestamp,
-                            direction='IN'
+                            message_type='IN'
                         )
 
                         # Actualizar contacto
