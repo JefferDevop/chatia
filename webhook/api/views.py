@@ -42,6 +42,7 @@ class WhatsAppWebhookAPIView(APIView):
 
                     # Mensaje entrante
                     if 'messages' in value:
+                        print("Datos recibidos:", value)
                         message_data = value['messages'][0]
                         wa_id = message_data['from']
                         texto = message_data['text']['body']
@@ -86,6 +87,7 @@ class WhatsAppWebhookAPIView(APIView):
 
                     #  Estados (delivered, read)
                     elif 'statuses' in value:
+                        print("Datos de estado recibidos:", value)
                         for status_info in value['statuses']:
                             msg_id = status_info['id']
                             status = status_info['status']
