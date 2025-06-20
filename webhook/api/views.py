@@ -20,11 +20,11 @@ class WhatsAppWebhookAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        print("\ud83d\udd14 WhatsAppWebhookAPIView cargada")
-        print("\ud83d\udd0d Headers:", dict(request.headers))
-        print("\ud83d\udcc6 Query Params:", request.query_params)
-        print("\ud83d\udcc6 GET Params:", request.GET.dict())
-        print("\ud83d\udce9 Raw Body (GET):", request.body)
+        print("WhatsAppWebhookAPIView cargada")
+        print(" Headers:", dict(request.headers))
+        print("Query Params:", request.query_params)
+        print("GET Params:", request.GET.dict())
+        print("Raw Body (GET):", request.body)
 
         mode = request.GET.get('hub.mode')
         token = request.GET.get('hub.verify_token')
@@ -35,10 +35,10 @@ class WhatsAppWebhookAPIView(APIView):
         return JsonResponse({}, status=403)
 
     def post(self, request):
-        print("\ud83d\udd14 WhatsAppWebhookAPIView recibi\xf3 POST")
-        print("\ud83d\udd0d Headers:", dict(request.headers))
-        print("\ud83d\udce9 Raw Body:", request.body)
-        print("\ud83d\udcc6 JSON:", request.data)
+        print(" WhatsAppWebhookAPIView recibido POST")
+        print(" Headers:", dict(request.headers))
+        print(" Raw Body:", request.body)
+        print(" JSON:", request.data)
 
         try:
             data = request.data
@@ -48,7 +48,7 @@ class WhatsAppWebhookAPIView(APIView):
                 for change in entry.get('changes', []):
                     value = change.get('value', {})
 
-                    # \ud83d\udfe2 Mensaje entrante
+                    # Mensaje entrante
                     if 'messages' in value:
                         message_data = value['messages'][0]
                         wa_id = message_data['from']
@@ -65,7 +65,7 @@ class WhatsAppWebhookAPIView(APIView):
                             direction='IN'
                         )
 
-                        # \ud83d\udd35 Actualizar contacto
+                        # Actualizar contacto
                         contacto, creado = WhatsAppContact.objects.get_or_create(
                             wa_id=wa_id,
                             defaults={"nombre": sender_name}
@@ -138,8 +138,8 @@ class WhatsAppWebhookAPIView(APIView):
             return JsonResponse({'status': 'ok'}, status=200)
 
         except Exception as e:
-            print("\u274c Error al procesar mensaje:", str(e))
-            return JsonResponse({'error': 'Formato no v\xe1lido'}, status=400)
+            print(" Error al procesar mensaje:", str(e))
+            return JsonResponse({'error': 'Formato no valido'}, status=400)
 
 
             
