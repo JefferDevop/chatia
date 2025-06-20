@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
+from django.http import HttpResponse
 from django.http import JsonResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -31,8 +32,8 @@ class WhatsAppWebhookAPIView(APIView):
         challenge = request.GET.get('hub.challenge')
 
         if mode == 'subscribe' and token == 'demo':
-            return JsonResponse({'hub.challenge': challenge})
-        return JsonResponse({}, status=403)
+            return HttpResponse(challenge)
+        return HttpResponse("Forbidden", status=403)
 
     def post(self, request):
         print(" WhatsAppWebhookAPIView recibido POST")
