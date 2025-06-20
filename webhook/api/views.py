@@ -54,7 +54,7 @@ class WhatsAppWebhookAPIView(APIView):
                             wa_id=wa_id,
                             sender_name=sender_name,
                             message_body=texto,
-                            timestamp=timestamp,
+                            created_at=timestamp,
                             direction='IN'
                         )
 
