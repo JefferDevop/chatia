@@ -4,7 +4,7 @@ from .models import WhatsAppContact, WhatsAppMessage, WhatsAppMessageStatus
 
 @admin.register(WhatsAppContact)
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ('wa_id', 'last_interaction')
+    list_display = ('wa_id', 'nombre', 'last_interaction')
 
 @admin.register(WhatsAppMessage)
 class MessageAdmin(admin.ModelAdmin):

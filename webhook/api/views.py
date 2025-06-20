@@ -58,15 +58,18 @@ class WhatsAppWebhookAPIView(APIView):
                             message_type='IN'
                         )
 
-                        # Actualizar contacto
+                        # Crear o actualizar contacto
                         contacto, creado = WhatsAppContact.objects.get_or_create(
                             wa_id=wa_id,
-                            defaults={"nombre": sender_name}
+                            defaults={"nombre": sender_name, "last_interaction": timestamp}
                         )
-                        contacto.last_interaction = datetime.fromtimestamp(int(timestamp), tz=pytz.UTC)
-                        contacto.save()
 
-                        # Enviar al frontend
+                        if not creado:
+                            contacto.nombre = sender_name  # Actualiza el nombre si cambia
+                            contacto.last_interaction = timestamp
+                            contacto.save()
+
+                                            # Enviar al frontend
                         async_to_sync(channel_layer.group_send)(
                             "whatsapp_updates",
                             {

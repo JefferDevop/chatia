@@ -4,10 +4,12 @@ from django.utils import timezone
 
 class WhatsAppContact(models.Model):
     wa_id = models.CharField(max_length=50, unique=True)
+    nombre = models.CharField(max_length=100, blank=True, null=True)
     last_interaction = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return self.wa_id
+        return f"{self.nombre or ''} ({self.wa_id})"
+    
 
 class WhatsAppMessage(models.Model):
     wa_id = models.CharField(max_length=50)
