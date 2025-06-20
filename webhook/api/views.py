@@ -21,11 +21,6 @@ class WhatsAppWebhookAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        print("WhatsAppWebhookAPIView cargada")
-        print(" Headers:", dict(request.headers))
-        print("Query Params:", request.query_params)
-        print("GET Params:", request.GET.dict())
-        print("Raw Body (GET):", request.body)
 
         mode = request.GET.get('hub.mode')
         token = request.GET.get('hub.verify_token')
@@ -36,10 +31,6 @@ class WhatsAppWebhookAPIView(APIView):
         return HttpResponse("Forbidden", status=403)
 
     def post(self, request):
-        print(" WhatsAppWebhookAPIView recibido POST")
-        print(" Headers:", dict(request.headers))
-        print(" Raw Body:", request.body)
-        print(" JSON:", request.data)
 
         try:
             data = request.data
@@ -61,7 +52,7 @@ class WhatsAppWebhookAPIView(APIView):
                         WhatsAppMessage.objects.create(
                             wa_id=wa_id,
                             sender_name=sender_name,
-                            body=texto,
+                            message_body=texto,
                             timestamp=timestamp,
                             direction='IN'
                         )
@@ -113,7 +104,7 @@ class WhatsAppWebhookAPIView(APIView):
                                 pricing_model=pricing_model
                             )
 
-                            # \ud83d\udd35 Actualizar contacto si existe
+                            # Actualizar contacto si existe
                             try:
                                 contacto = WhatsAppContact.objects.get(wa_id=wa_id)
                                 contacto.last_interaction = timestamp
