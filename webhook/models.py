@@ -25,7 +25,7 @@ class WhatsAppMessageStatus(models.Model):
     message_id = models.CharField(max_length=100)  # ID de WhatsApp
     wa_id = models.CharField(max_length=50)
     status = models.CharField(max_length=20)  # delivered, read, etc.
-    timestamp = models.CharField(max_length=20)
+    timestamp = models.DateTimeField(default=timezone.now)
     conversation_id = models.CharField(max_length=100, blank=True, null=True)
     pricing_model = models.CharField(max_length=50, blank=True, null=True)
     category = models.CharField(max_length=50, blank=True, null=True)

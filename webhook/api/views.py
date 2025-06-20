@@ -45,7 +45,8 @@ class WhatsAppWebhookAPIView(APIView):
                         message_data = value['messages'][0]
                         wa_id = message_data['from']
                         texto = message_data['text']['body']
-                        timestamp = message_data['timestamp']
+                        raw_timestamp = message_data['timestamp']
+                        timestamp = datetime.fromtimestamp(int(raw_timestamp), tz=pytz.UTC)
                         sender_name = value['contacts'][0]['profile']['name']
 
                         # Guardar mensaje
@@ -80,7 +81,7 @@ class WhatsAppWebhookAPIView(APIView):
                             }
                         )
 
-                    # \ud83d\udfe1 Estados (delivered, read)
+                    #  Estados (delivered, read)
                     elif 'statuses' in value:
                         for status_info in value['statuses']:
                             msg_id = status_info['id']
