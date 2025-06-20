@@ -5,6 +5,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.db import IntegrityError
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from datetime import datetime
@@ -46,18 +47,24 @@ class WhatsAppWebhookAPIView(APIView):
                         message_data = value['messages'][0]
                         wa_id = message_data['from']
                         texto = message_data['text']['body']
+                        message_id = message_data.get('id', 'unknown_id')
                         raw_timestamp = message_data['timestamp']
                         timestamp = datetime.fromtimestamp(int(raw_timestamp), tz=pytz.UTC)
                         sender_name = value['contacts'][0]['profile']['name']
 
                         # Guardar mensaje
-                        WhatsAppMessage.objects.create(
-                            wa_id=wa_id,
-                            sender_name=sender_name,
-                            message_body=texto,
-                            created_at=timestamp,
-                            message_type='IN'
-                        )
+                        try:
+                            WhatsAppMessage.objects.create(
+                                wa_id=wa_id,
+                                sender_name=sender_name,
+                                message_body=texto,
+                                created_at=timestamp,
+                                message_type='IN',
+                                message_id=message_id
+                            )
+                        except IntegrityError:
+                            print(f"⚠️ Mensaje duplicado ignorado: {message_id}")
+                            continue
 
                         # Crear o actualizar contacto
                         contacto, creado = WhatsAppContact.objects.get_or_create(

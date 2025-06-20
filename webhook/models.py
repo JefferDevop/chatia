@@ -12,6 +12,7 @@ class WhatsAppContact(models.Model):
     
 
 class WhatsAppMessage(models.Model):
+    message_id = models.CharField(max_length=100, unique=True)
     wa_id = models.CharField(max_length=50)
     sender_name = models.CharField(max_length=100, blank=True)
     message_body = models.TextField()
