@@ -1,4 +1,6 @@
 import time
+from datetime import datetime
+import pytz
 import requests
 from decouple import config
 from asgiref.sync import async_to_sync
@@ -49,7 +51,8 @@ def enviar_mensaje_template(wa_id, template_name, language_code="es", components
     print("➡️ Respuesta de WhatsApp API:", response_data)
 
     if response.status_code == 200:
-        timestamp = str(int(time.time()))
+        raw_timestamp = int(time.time())  # Unix timestamp
+        timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC) 
 
         WhatsAppMessage.objects.create(
             wa_id=wa_id,
@@ -70,7 +73,7 @@ def enviar_mensaje_template(wa_id, template_name, language_code="es", components
                     "wa_id": wa_id,
                     "sender_name": "TÚ",
                     "message_body": f"[PLANTILLA] {template_name}",
-                    "wa_timestamp": timestamp,
+                    "wa_timestamp": timestamp.isoformat(),
                     "message_type": "sent",
                 }
             }
