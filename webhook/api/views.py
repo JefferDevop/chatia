@@ -37,6 +37,8 @@ class WhatsAppWebhookAPIView(APIView):
             data = request.data
             channel_layer = get_channel_layer()
 
+            print("🔌 Redis conectado:", channel_layer)
+
             for entry in data.get('entry', []):
                 for change in entry.get('changes', []):
                     value = change.get('value', {})
