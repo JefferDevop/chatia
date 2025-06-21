@@ -1,48 +1,52 @@
 from rest_framework import serializers
-from accounts.api.serializers import UserSerializer
-from ..models import Client, Agent, Message, Conversation, Task, Tag, WebhookEvent
-from accounts.models import Account
-
-# class UserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Account
-#         fields = ['id', 'username', 'email']
-
-class TagSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tag
-        fields = '__all__'
+from ..models import Client, Agent, Conversation, ConversationAgent, MensajeWhatsApp
+from accounts.models import Account  # Ajusta si tu modelo está en otro lado
 
 class ClientSerializer(serializers.ModelSerializer):
-    tags = TagSerializer(many=True, read_only=True)
-
     class Meta:
         model = Client
-        fields = '__all__'
+        fields = ['id', 'nombre', 'wa_id']
 
 class AgentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user_id = serializers.PrimaryKeyRelatedField(source='user', queryset=Account.objects.all())
 
     class Meta:
         model = Agent
-        fields = '__all__'
+        fields = ['id', 'user_id', 'nombre', 'email', 'available']
+
+class ConversationAgentSerializer(serializers.ModelSerializer):
+    agent = AgentSerializer()
+
+    class Meta:
+        model = ConversationAgent
+        fields = ['id', 'agent', 'asignado_en', 'activo']
+
+class MensajeWhatsAppSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MensajeWhatsApp
+        fields = [
+            'id',
+            'conversacion',
+            'tipo',
+            'mensaje',
+            'timestamp',
+            'visto',
+            'tiempo_respuesta'
+        ]
 
 class ConversationSerializer(serializers.ModelSerializer):
+    cliente = ClientSerializer()
+    agentes = AgentSerializer(many=True)
+    mensajes = MensajeWhatsAppSerializer(many=True, read_only=True)
+
     class Meta:
         model = Conversation
-        fields = '__all__'
-
-class MessageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Message
-        fields = '__all__'
-
-class TaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task
-        fields = '__all__'
-
-class WebhookEventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WebhookEvent
-        fields = '__all__'
+        fields = [
+            'id',
+            'cliente',
+            'agentes',
+            'inicio_conversacion',
+            'fin_conversacion',
+            'estado',
+            'mensajes'
+        ]
