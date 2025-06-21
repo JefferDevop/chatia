@@ -16,7 +16,7 @@ class WhatsAppMessage(models.Model):
     wa_id = models.CharField(max_length=50)
     sender_name = models.CharField(max_length=100, blank=True)
     message_body = models.TextField()
-    wa_timestamp = models.CharField(max_length=20)
+    wa_timestamp = models.DateTimeField(default=timezone.now)
     message_type = models.CharField(max_length=10, default="unassigned")  # 'received' o 'sent'
     created_at = models.DateTimeField(auto_now_add=True)
 
