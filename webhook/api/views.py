@@ -89,7 +89,7 @@ class WhatsAppWebhookAPIView(APIView):
                                     "wa_id": wa_id,
                                     "sender_name": sender_name,
                                     "body": texto,
-                                    "timestamp": timestamp
+                                    "timestamp": timestamp.isoformat()
                                 }
                             }
                         )
@@ -137,7 +137,7 @@ class WhatsAppWebhookAPIView(APIView):
                                         "wa_id": wa_id,
                                         "status": status,
                                         "message_id": msg_id,
-                                        "timestamp": raw_timestamp
+                                        "timestamp": timestamp.isoformat()
                                     }
                                 }
                             )
