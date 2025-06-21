@@ -51,7 +51,7 @@ class WhatsAppWebhookAPIView(APIView):
                         texto = message_data['text']['body']
                         message_id = message_data.get('id', 'unknown_id')
                         raw_timestamp = message_data['timestamp']
-                        timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC)
+                        timestamp = datetime.fromtimestamp(int(raw_timestamp), tz=pytz.UTC)
                         sender_name = value['contacts'][0]['profile']['name']
 
                         # Guardar mensaje
