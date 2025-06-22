@@ -67,7 +67,6 @@ def enviar_mensaje_template(wa_id, template_name, language_code="es", components
             mensaje=f"[TEMPLATE: {template_name}]",  # marcador opcional
             timestamp=timestamp,
             message_id=response_data.get('messages', [{}])[0].get('id', ''),
-            tiempo_respuesta=0,  # Inicialmente 0, se actualizará cuando se reciba la respuesta
             visto=False
         )
 
