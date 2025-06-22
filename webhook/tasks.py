@@ -13,35 +13,39 @@ import json
 @shared_task
 def verificar_conversaciones_inactivas():
     ahora = timezone.now()
-    expiradas = WhatsAppConversation.objects.filter(
-        estado='activa',
-        inicio_conversacion__lt=ahora - timezone.timedelta(minutes=30)
-    )
+    conversaciones = WhatsAppConversation.objects.filter(estado='activa')
+    channel_layer = get_channel_layer()
 
-    if not expiradas.exists():
+    for conv in conversaciones:
+        ultimo_mensaje = conv.mensajes.order_by('-timestamp').first()
+
+        if not ultimo_mensaje:
+            continue  # No hay mensajes, no cerrar aún
+
+        if ultimo_mensaje.timestamp < ahora - timezone.timedelta(minutes=30):
+            conv.estado = 'finalizada'
+            conv.fin_conversacion = ahora
+            conv.save()
+
+            # Emitir evento de cierre al frontend
+            wa_id = conv.cliente.wa_id
+            async_to_sync(channel_layer.group_send)(
+                f"chat_{wa_id}",
+                {
+                    "type": "send_whatsapp_event",
+                    "data": {
+                        "event": "conversation_closed",
+                        "wa_id": wa_id,
+                        "timestamp": ahora.isoformat()
+                    }
+                }
+            )
+
+    # Si ya no hay conversaciones activas, eliminar la tarea periódica
+    if not WhatsAppConversation.objects.filter(estado='activa').exists():
         from django_celery_beat.models import PeriodicTask
         PeriodicTask.objects.filter(name='verificar_conversaciones_inactivas').delete()
-        return
 
-    channel_layer = get_channel_layer()
-    for conv in expiradas:
-        conv.estado = 'finalizada'
-        conv.fin_conversacion = ahora
-        conv.save()
-
-        # Emitir evento de cierre
-        wa_id = conv.cliente.wa_id
-        async_to_sync(channel_layer.group_send)(
-            f"chat_{wa_id}",
-            {
-                "type": "send_whatsapp_event",
-                "data": {
-                    "event": "conversation_closed",
-                    "wa_id": wa_id,
-                    "timestamp": ahora.isoformat()
-                }
-            }
-        )
 
 
 
