@@ -8,6 +8,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from django.utils import timezone
 import pytz
+import json
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from ..whatsapp_utils import enviar_mensaje_template
@@ -103,7 +104,7 @@ class WhatsAppWebhookAPIView(APIView):
                         )
 
                         # Crear mensaje
-                        WhatsAppMessage.objects.create(
+                        mensaje = WhatsAppMessage.objects.create(
                             conversacion=conversacion,
                             tipo='entrante',
                             mensaje=texto,
@@ -438,39 +439,95 @@ class WhatsAppWebhookAPIView(APIView):
 #             return JsonResponse({'error': 'Formato no valido'}, status=400)
 
 
-            
+
 
 
 @csrf_exempt
 def test_enviar_template(request):
-    """Vista para enviar un mensaje con plantilla que tiene imagen en el encabezado"""
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
 
-    wa_id = "573005309990"
-    template_name = "plantilla_demo"
+    try:
+        body = json.loads(request.body)
+        wa_id = body.get("wa_id", "573005309990")
+        nombre = body.get("nombre", "César")
+        apellido = body.get("apellido", "Quiñones")
+        image_url = body.get("imagen", "https://r-charts.com/es/miscelanea/procesamiento-imagenes-magick_files/figure-html/importar-imagen-r.png")
+        template_name = body.get("template", "plantilla_demo")
 
-    components = [
-        {
-            "type": "header",
-            "parameters": [
-                {
-                    "type": "image",
-                    "image": {
-                        "link": "https://r-charts.com/es/miscelanea/procesamiento-imagenes-magick_files/figure-html/importar-imagen-r.png"
+        components = [
+            {
+                "type": "header",
+                "parameters": [
+                    {
+                        "type": "image",
+                        "image": {"link": image_url}
                     }
-                }
-            ]
-        },
-        {
-            "type": "body",
-            "parameters": [
-                {"type": "text", "text": "César"},
-                {"type": "text", "text": "Quiñones"}
-            ]
-        }
-    ]
+                ]
+            },
+            {
+                "type": "body",
+                "parameters": [
+                    {"type": "text", "text": nombre},
+                    {"type": "text", "text": apellido}
+                ]
+            }
+        ]
 
-    resultado = enviar_mensaje_template(wa_id, template_name, "es", components)
-    return JsonResponse(resultado)
+        resultado = enviar_mensaje_template(wa_id, template_name, "es", components)
+
+        # Registrar mensaje saliente
+        cliente, _ = WhatsAppClient.objects.get_or_create(wa_id=wa_id, defaults={"nombre": nombre})
+        conversacion, _ = WhatsAppConversation.objects.get_or_create(
+            cliente=cliente, estado='activa', defaults={'inicio_conversacion': timezone.now()}
+        )
+
+        WhatsAppMessage.objects.create(
+            conversacion=conversacion,
+            tipo='saliente',
+            mensaje=f"[TEMPLATE: {template_name}]",  # marcador opcional
+            timestamp=timezone.now(),
+            visto=False
+        )
+
+        return JsonResponse(resultado)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+            
+
+
+# @csrf_exempt
+# def test_enviar_template(request):
+#     """Vista para enviar un mensaje con plantilla que tiene imagen en el encabezado"""
+
+#     wa_id = "573005309990"
+#     template_name = "plantilla_demo"
+
+#     components = [
+#         {
+#             "type": "header",
+#             "parameters": [
+#                 {
+#                     "type": "image",
+#                     "image": {
+#                         "link": "https://r-charts.com/es/miscelanea/procesamiento-imagenes-magick_files/figure-html/importar-imagen-r.png"
+#                     }
+#                 }
+#             ]
+#         },
+#         {
+#             "type": "body",
+#             "parameters": [
+#                 {"type": "text", "text": "César"},
+#                 {"type": "text", "text": "Quiñones"}
+#             ]
+#         }
+#     ]
+
+#     resultado = enviar_mensaje_template(wa_id, template_name, "es", components)
+#     return JsonResponse(resultado)
 
 
 
