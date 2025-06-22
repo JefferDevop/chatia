@@ -9,6 +9,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from ..whatsapp_utils import enviar_mensaje_template
+from ..tasks import iniciar_verificacion_conversaciones
 
 
 from rest_framework import viewsets
@@ -95,6 +96,8 @@ class WhatsAppWebhookAPIView(APIView):
                         )
 
 
+
+
                         # Guardar mensaje evitando duplicados
                         if not WhatsAppMessage.objects.filter(message_id=message_id).exists():
                             WhatsAppMessage.objects.create(
@@ -104,6 +107,8 @@ class WhatsAppWebhookAPIView(APIView):
                                 timestamp=timestamp,
                                 message_id=message_id
                             )
+
+                            iniciar_verificacion_conversaciones()
 
 
                         # Emitir al canal
@@ -470,6 +475,10 @@ def test_enviar_template(request):
         ]
 
         resultado = enviar_mensaje_template(wa_id, template_name, "es", components)
+
+        print("Resultado del envío - para activar verificacion:", resultado)
+
+        iniciar_verificacion_conversaciones()
        
 
         return JsonResponse(resultado)

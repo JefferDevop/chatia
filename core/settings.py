@@ -41,6 +41,7 @@ TENANT_APPS = (
     'colorfield',
     'django_filters',    
     'channels',
+    'django_celery_beat',
     'webhook',
     'accounts',
 )
@@ -177,11 +178,19 @@ STATICFILES_DIRS = (
 )
 
 
-CELERY_TASK_ROUTES = {
-    'core.tasks.process_incoming_message': {'queue': 'default'},
-    'core.tasks.send_whatsapp_message': {'queue': 'default'},
-}
+# CELERY_TASK_ROUTES = {
+#     'core.tasks.process_incoming_message': {'queue': 'default'},
+#     'core.tasks.send_whatsapp_message': {'queue': 'default'},
+# }
 
+
+
+# Ejemplo con Redis como broker
+CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 

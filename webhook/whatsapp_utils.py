@@ -6,7 +6,60 @@ from decouple import config
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
+# from celery import shared_task
+# from django.utils import timezone
+# from datetime import timedelta
+
 from .models import WhatsAppMessage, WhatsAppClient, WhatsAppConversation
+
+
+
+
+
+
+# @shared_task
+# def cerrar_conversaciones_inactivas():
+#     ahora = timezone.now()
+#     limite_inactividad = ahora - timedelta(minutes=30)
+
+#     conversaciones = WhatsAppConversation.objects.filter(
+#         estado='activa',
+#         mensajes__timestamp__lt=limite_inactividad
+#     ).distinct()
+
+#     for conversacion in conversaciones:
+#         conversacion.estado = 'finalizada'
+#         conversacion.fin_conversacion = ahora
+#         conversacion.save()
+
+#         channel_layer = get_channel_layer()
+#         wa_id = conversacion.cliente.wa_id
+
+#         async_to_sync(channel_layer.group_send)(
+#             f"chat_{wa_id}",
+#             {
+#                 "type": "send_whatsapp_event",
+#                 "data": {
+#                     "event": "conversation_closed",
+#                     "wa_id": wa_id,
+#                     "timestamp": ahora.isoformat(),
+#                     "conversacion_id": conversacion.id
+#                 }
+#             }
+#         )
+
+#     return f"Cerradas {conversaciones.count()} conversaciones inactivas."
+
+
+# @shared_task(bind=True)
+# def iniciar_verificacion_conversaciones(self):
+#     # Verificar si hay conversaciones activas, si no hay, no se programa la siguiente
+#     if WhatsAppConversation.objects.filter(estado='activa').exists():
+#         cerrar_conversaciones_inactivas.apply_async(countdown=60)
+#         iniciar_verificacion_conversaciones.apply_async(countdown=60)
+
+
+
 
 
 def enviar_mensaje_template(wa_id, template_name, language_code="es", components=None):
