@@ -57,7 +57,8 @@ class WhatsAppMessageViewSet(viewsets.ModelViewSet):
 
 
 
-# Webhook View
+
+
 class WhatsAppWebhookAPIView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
@@ -76,10 +77,6 @@ class WhatsAppWebhookAPIView(APIView):
             data = request.data
             channel_layer = get_channel_layer()
 
-
-
-
-
             for entry in data.get('entry', []):
                 for change in entry.get('changes', []):
                     value = change.get('value', {})
@@ -88,48 +85,30 @@ class WhatsAppWebhookAPIView(APIView):
                         message_data = value['messages'][0]
                         wa_id = message_data['from']
                         texto = message_data['text']['body']
-                        message_id = message_data.get('id', 'unknown_id')
                         raw_timestamp = message_data['timestamp']
                         timestamp = datetime.fromtimestamp(int(raw_timestamp), tz=pytz.UTC)
                         sender_name = value['contacts'][0]['profile']['name']
 
-                        # Cliente
+                        # Obtener o crear cliente
                         cliente, _ = WhatsAppClient.objects.get_or_create(
                             wa_id=wa_id,
                             defaults={"nombre": sender_name}
                         )
 
-                        # Buscar conversación activa
-                        conversacion = WhatsAppConversation.objects.filter(
+                        # Obtener o crear conversación activa
+                        conversacion, _ = WhatsAppConversation.objects.get_or_create(
                             cliente=cliente,
-                            estado='activa'
-                        ).order_by('-inicio_conversacion').first()
+                            estado='activa',
+                            defaults={'inicio_conversacion': timestamp}
+                        )
 
-                        # Si no existe, crearla
-                        if not conversacion:
-                                conversacion = WhatsAppConversation.objects.create(
-                                cliente=cliente,
-                                inicio_conversacion=timestamp
-                            )
-
-                        # Guardar mensaje evitando duplicados
-                        if not WhatsAppMessage.objects.filter(message_id=message_id).exists():
-                            WhatsAppMessage.objects.create(
-                                conversacion=conversacion,
-                                tipo='entrante',
-                                mensaje=texto,
-                                timestamp=timestamp,
-                                message_id=message_id
-                            )
-
-
-
-
-
-
-
-
-            
+                        # Crear mensaje
+                        WhatsAppMessage.objects.create(
+                            conversacion=conversacion,
+                            tipo='entrante',
+                            mensaje=texto,
+                            timestamp=timestamp
+                        )
 
                         # Emitir al canal
                         async_to_sync(channel_layer.group_send)(
@@ -154,33 +133,154 @@ class WhatsAppWebhookAPIView(APIView):
                             timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC)
                             wa_id = status_info['recipient_id']
 
-                            # Actualizar mensaje si existe
+                            # Buscar mensaje por ID si lo tienes implementado con ID único
                             try:
-                                mensaje = WhatsAppMessage.objects.get(message_id=msg_id)
+                                mensaje = WhatsAppMessage.objects.get(id=msg_id)
                                 if status == 'read':
                                     mensaje.visto = True
                                     mensaje.save()
+
+                                # Emitir evento al frontend
+                                async_to_sync(channel_layer.group_send)(
+                                    f"chat_{wa_id}",
+                                    {
+                                        "type": "send_whatsapp_event",
+                                        "data": {
+                                            "event": "status_update",
+                                            "wa_id": wa_id,
+                                            "status": status,
+                                            "message_id": msg_id,
+                                            "timestamp": timestamp.isoformat(),
+                                        },
+                                    },
+                                )
                             except WhatsAppMessage.DoesNotExist:
                                 pass
-
-                            async_to_sync(channel_layer.group_send)(
-                                f"chat_{wa_id}",
-                                {
-                                    "type": "send_whatsapp_event",
-                                    "data": {
-                                        "event": "status_update",
-                                        "wa_id": wa_id,
-                                        "status": status,
-                                        "message_id": msg_id,
-                                        "timestamp": timestamp.isoformat(),
-                                    },
-                                },
-                            )
 
             return JsonResponse({'status': 'ok'}, status=200)
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+
+
+
+
+# # Webhook View
+# class WhatsAppWebhookAPIView(APIView):
+#     authentication_classes = []
+#     permission_classes = [AllowAny]
+
+#     def get(self, request):
+#         mode = request.GET.get('hub.mode')
+#         token = request.GET.get('hub.verify_token')
+#         challenge = request.GET.get('hub.challenge')
+
+#         if mode == 'subscribe' and token == 'demo':
+#             return HttpResponse(challenge)
+#         return HttpResponse("Forbidden", status=403)
+
+#     def post(self, request):
+#         try:
+#             data = request.data
+#             channel_layer = get_channel_layer()
+
+
+
+
+
+#             for entry in data.get('entry', []):
+#                 for change in entry.get('changes', []):
+#                     value = change.get('value', {})
+
+#                     if 'messages' in value:
+#                         message_data = value['messages'][0]
+#                         wa_id = message_data['from']
+#                         texto = message_data['text']['body']
+#                         message_id = message_data.get('id', 'unknown_id')
+#                         raw_timestamp = message_data['timestamp']
+#                         timestamp = datetime.fromtimestamp(int(raw_timestamp), tz=pytz.UTC)
+#                         sender_name = value['contacts'][0]['profile']['name']
+
+#                         # Cliente
+#                         cliente, _ = WhatsAppClient.objects.get_or_create(
+#                             wa_id=wa_id,
+#                             defaults={"nombre": sender_name}
+#                         )
+
+#                         # Buscar conversación activa
+#                         conversacion = WhatsAppConversation.objects.filter(
+#                             cliente=cliente,
+#                             estado='activa'
+#                         ).order_by('-inicio_conversacion').first()
+
+#                         # Si no existe, crearla
+#                         if not conversacion:
+#                                 conversacion = WhatsAppConversation.objects.create(
+#                                 cliente=cliente,
+#                                 inicio_conversacion=timestamp
+#                             )
+
+#                         # Guardar mensaje evitando duplicados
+#                         if not WhatsAppMessage.objects.filter(message_id=message_id).exists():
+#                             WhatsAppMessage.objects.create(
+#                                 conversacion=conversacion,
+#                                 tipo='entrante',
+#                                 mensaje=texto,
+#                                 timestamp=timestamp,
+#                                 message_id=message_id
+#                             )
+
+#                         # Emitir al canal
+#                         async_to_sync(channel_layer.group_send)(
+#                             f"chat_{wa_id}",
+#                             {
+#                                 "type": "send_whatsapp_event",
+#                                 "data": {
+#                                     "event": "new_message",
+#                                     "wa_id": wa_id,
+#                                     "sender_name": sender_name,
+#                                     "body": texto,
+#                                     "timestamp": timestamp.isoformat(),
+#                                 },
+#                             },
+#                         )
+
+#                     elif 'statuses' in value:
+#                         for status_info in value['statuses']:
+#                             msg_id = status_info['id']
+#                             status = status_info['status']
+#                             raw_timestamp = int(status_info['timestamp'])
+#                             timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC)
+#                             wa_id = status_info['recipient_id']
+
+#                             # Actualizar mensaje si existe
+#                             try:
+#                                 mensaje = WhatsAppMessage.objects.get(message_id=msg_id)
+#                                 if status == 'read':
+#                                     mensaje.visto = True
+#                                     mensaje.save()
+#                             except WhatsAppMessage.DoesNotExist:
+#                                 pass
+
+#                             async_to_sync(channel_layer.group_send)(
+#                                 f"chat_{wa_id}",
+#                                 {
+#                                     "type": "send_whatsapp_event",
+#                                     "data": {
+#                                         "event": "status_update",
+#                                         "wa_id": wa_id,
+#                                         "status": status,
+#                                         "message_id": msg_id,
+#                                         "timestamp": timestamp.isoformat(),
+#                                     },
+#                                 },
+#                             )
+
+#             return JsonResponse({'status': 'ok'}, status=200)
+
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=400)
 
 
 
