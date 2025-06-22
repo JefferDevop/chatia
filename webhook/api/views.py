@@ -140,6 +140,7 @@ class WhatsAppWebhookAPIView(APIView):
                             raw_timestamp = int(status_info['timestamp'])
                             timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC)
                             wa_id = status_info['recipient_id']
+                            print(f"Estado del mensaje {msg_id} para {wa_id}: {status} a las {timestamp}")
 
                             # Buscar mensaje por ID si lo tienes implementado con ID único
                             try:
