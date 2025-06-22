@@ -97,7 +97,6 @@ class WhatsAppWebhookAPIView(APIView):
                             defaults={"nombre": sender_name}
                         )
 
-                        print(f"Mensaje recibido de {wa_id}: {texto} a las {timestamp}")
 
                         # Obtener o crear conversación activa
                         conversacion, _ = WhatsAppConversation.objects.get_or_create(
@@ -134,6 +133,7 @@ class WhatsAppWebhookAPIView(APIView):
                         )
 
                     elif 'statuses' in value:
+                        print("Datos de estado recibidos:", value)
                         for status_info in value['statuses']:
                             msg_id = status_info['id']
                             status = status_info['status']
