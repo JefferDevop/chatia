@@ -89,6 +89,7 @@ class WhatsAppWebhookAPIView(APIView):
                         raw_timestamp = message_data['timestamp']
                         timestamp = datetime.fromtimestamp(int(raw_timestamp), tz=pytz.UTC)
                         sender_name = value['contacts'][0]['profile']['name']
+                        message_id=message_data.get('id', 'unknown_id')
 
                         # Obtener o crear cliente
                         cliente, _ = WhatsAppClient.objects.get_or_create(
@@ -105,14 +106,17 @@ class WhatsAppWebhookAPIView(APIView):
                             defaults={'inicio_conversacion': timestamp}
                         )
 
-                        # Crear mensaje
-                        mensaje = WhatsAppMessage.objects.create(
-                            conversacion=conversacion,
-                            message_id=message_data.get('id', 'unknown_id'),
-                            tipo='entrante',
-                            mensaje=texto,
-                            timestamp=timestamp
-                        )
+
+                        # Guardar mensaje evitando duplicados
+                        if not WhatsAppMessage.objects.filter(message_id=message_id).exists():
+                            WhatsAppMessage.objects.create(
+                                conversacion=conversacion,
+                                tipo='entrante',
+                                mensaje=texto,
+                                timestamp=timestamp,
+                                message_id=message_id
+                            )
+
 
                         # Emitir al canal
                         async_to_sync(channel_layer.group_send)(
@@ -139,7 +143,7 @@ class WhatsAppWebhookAPIView(APIView):
 
                             # Buscar mensaje por ID si lo tienes implementado con ID único
                             try:
-                                mensaje = WhatsAppMessage.objects.get(id=msg_id)
+                                mensaje = WhatsAppMessage.objects.get(message_id=msg_id)
                                 if status == 'read':
                                     mensaje.visto = True
                                     mensaje.save()
