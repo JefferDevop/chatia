@@ -75,6 +75,7 @@ class WhatsAppConversationAgent(models.Model):
 
 
 class WhatsAppMessage(models.Model):
+    message_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
     conversacion = models.ForeignKey(WhatsAppConversation, on_delete=models.CASCADE, related_name='mensajes')
     tipo = models.CharField(
         max_length=10,

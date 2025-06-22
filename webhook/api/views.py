@@ -76,6 +76,10 @@ class WhatsAppWebhookAPIView(APIView):
             data = request.data
             channel_layer = get_channel_layer()
 
+
+
+
+
             for entry in data.get('entry', []):
                 for change in entry.get('changes', []):
                     value = change.get('value', {})
@@ -84,7 +88,7 @@ class WhatsAppWebhookAPIView(APIView):
                         message_data = value['messages'][0]
                         wa_id = message_data['from']
                         texto = message_data['text']['body']
-                        # message_id = message_data.get('id', 'unknown_id')
+                        message_id = message_data.get('id', 'unknown_id')
                         raw_timestamp = message_data['timestamp']
                         timestamp = datetime.fromtimestamp(int(raw_timestamp), tz=pytz.UTC)
                         sender_name = value['contacts'][0]['profile']['name']
@@ -95,23 +99,37 @@ class WhatsAppWebhookAPIView(APIView):
                             defaults={"nombre": sender_name}
                         )
 
-                        # Conversación activa o crear una nueva
-                        conversacion, creada = WhatsAppConversation.objects.get_or_create(
+                        # Buscar conversación activa
+                        conversacion = WhatsAppConversation.objects.filter(
                             cliente=cliente,
-                            estado='activa',
-                            defaults={"inicio_conversacion": timestamp}
-                        )
+                            estado='activa'
+                        ).order_by('-inicio_conversacion').first()
 
-                        # Mensaje
-                        try:
+                        # Si no existe, crearla
+                        if not conversacion:
+                                conversacion = WhatsAppConversation.objects.create(
+                                cliente=cliente,
+                                inicio_conversacion=timestamp
+                            )
+
+                        # Guardar mensaje evitando duplicados
+                        if not WhatsAppMessage.objects.filter(message_id=message_id).exists():
                             WhatsAppMessage.objects.create(
                                 conversacion=conversacion,
                                 tipo='entrante',
                                 mensaje=texto,
-                                timestamp=timestamp
+                                timestamp=timestamp,
+                                message_id=message_id
                             )
-                        except IntegrityError:
-                            continue
+
+
+
+
+
+
+
+
+            
 
                         # Emitir al canal
                         async_to_sync(channel_layer.group_send)(
@@ -136,11 +154,12 @@ class WhatsAppWebhookAPIView(APIView):
                             timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC)
                             wa_id = status_info['recipient_id']
 
-                            # Mensaje existente
+                            # Actualizar mensaje si existe
                             try:
-                                mensaje = WhatsAppMessage.objects.get(id=msg_id)
-                                mensaje.visto = (status == 'read')
-                                mensaje.save()
+                                mensaje = WhatsAppMessage.objects.get(message_id=msg_id)
+                                if status == 'read':
+                                    mensaje.visto = True
+                                    mensaje.save()
                             except WhatsAppMessage.DoesNotExist:
                                 pass
 
