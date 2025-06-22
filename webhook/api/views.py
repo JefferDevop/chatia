@@ -482,13 +482,7 @@ def test_enviar_template(request):
             cliente=cliente, estado='activa', defaults={'inicio_conversacion': timezone.now()}
         )
 
-        WhatsAppMessage.objects.create(
-            conversacion=conversacion,
-            tipo='saliente',
-            mensaje=f"[TEMPLATE: {template_name}]",  # marcador opcional
-            timestamp=timezone.now(),
-            visto=False
-        )
+       
 
         return JsonResponse(resultado)
 

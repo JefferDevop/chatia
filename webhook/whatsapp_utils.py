@@ -6,7 +6,7 @@ from decouple import config
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from .models import WhatsAppMessage
+from .models import WhatsAppMessage, WhatsAppClient, WhatsAppConversation
 
 
 def enviar_mensaje_template(wa_id, template_name, language_code="es", components=None):
@@ -54,13 +54,21 @@ def enviar_mensaje_template(wa_id, template_name, language_code="es", components
         raw_timestamp = int(time.time())  # Unix timestamp
         timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC) 
 
-        WhatsAppMessage.objects.create(
-            wa_id=wa_id,
-            sender_name="TÚ",
-            message_body=f"[PLANTILLA] {template_name}",
-            wa_timestamp=timestamp,
-            message_type="sent"  # cambia si prefieres "OUT"
+        # Registrar mensaje saliente
+        cliente, _ = WhatsAppClient.objects.get_or_create(wa_id=wa_id, defaults={"nombre": "nombre del cliente"})
+        conversacion, _ = WhatsAppConversation.objects.get_or_create(
+            cliente=cliente, estado='activa', defaults={'inicio_conversacion': timestamp}
         )
+
+
+        WhatsAppMessage.objects.create(
+            conversacion=conversacion,
+            tipo='saliente',
+            mensaje=f"[TEMPLATE: {template_name}]",  # marcador opcional
+            timestamp=timestamp,
+            visto=False
+        )
+
 
         # Notificación por canal
         channel_layer = get_channel_layer()
