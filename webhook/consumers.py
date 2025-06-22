@@ -23,9 +23,31 @@ class WhatsAppConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
+
+
     async def receive(self, text_data):
-        # Aquí podrías manejar mensajes enviados desde el frontend (opcional)
-        pass
+        data = json.loads(text_data)
+        evento = data.get("event")
+
+        if evento == "marcar_leido":
+            message_id = data.get("message_id")
+            if message_id:
+                await sync_to_async(self.marcar_mensaje_leido)(message_id)
+
+        elif evento == "marcar_conversacion_leida":
+            await sync_to_async(self.marcar_conversacion_leida)()
+
+
+    def marcar_conversacion_leida(self):
+        mensajes = WhatsAppMessage.objects.filter(
+            conversacion__cliente__wa_id=self.wa_id,
+            tipo='entrante',
+            visto=False
+        )
+        for m in mensajes:
+            m.visto = True
+            m.save()
+
 
     async def send_whatsapp_event(self, event):
         # Enviar evento desde backend al frontend
@@ -33,18 +55,19 @@ class WhatsAppConsumer(AsyncWebsocketConsumer):
 
     def get_mensajes(self):
         mensajes = WhatsAppMessage.objects.filter(
-            wa_id=self.wa_id
-        ).order_by('-wa_timestamp')[:20]
+            conversacion__cliente__wa_id=self.wa_id
+        ).order_by('-timestamp')[:20]
 
         return [
             {
-                "sender_name": m.sender_name,
-                "body": m.message_body,
-                "timestamp": m.wa_timestamp.isoformat(),
-                "message_type": m.message_type,
+                "sender_name": m.conversacion.cliente.nombre,
+                "body": m.mensaje,
+                "timestamp": m.timestamp.isoformat(),
+                "message_type": m.tipo,
                 "id": m.message_id
-            } for m in mensajes[::-1]
+            } for m in reversed(mensajes)
         ]
+
 
         
 

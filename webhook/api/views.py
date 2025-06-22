@@ -1,12 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from django.http import HttpResponse, JsonResponse
 from django.utils.timezone import datetime
-from django.db import IntegrityError
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from django.utils import timezone
 import pytz
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -14,10 +11,7 @@ from django.utils.decorators import method_decorator
 from ..whatsapp_utils import enviar_mensaje_template
 
 
-
-
-
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets
 from ..models import WhatsAppClient, WhatsAppAgent, WhatsAppConversation, WhatsAppConversationAgent, WhatsAppMessage
 from .serializers import (
     WhatsAppClientSerializer,
@@ -26,8 +20,6 @@ from .serializers import (
     WhatsAppMessageSerializer,
     WhatsAppConversationAgentSerializer,
 )
-
-
 
 # ViewSets
 class WhatsAppClientViewSet(viewsets.ModelViewSet):
@@ -53,9 +45,6 @@ class WhatsAppConversationAgentViewSet(viewsets.ModelViewSet):
 class WhatsAppMessageViewSet(viewsets.ModelViewSet):
     queryset = WhatsAppMessage.objects.all()
     serializer_class = WhatsAppMessageSerializer
-
-
-
 
 
 
@@ -133,14 +122,12 @@ class WhatsAppWebhookAPIView(APIView):
                         )
 
                     elif 'statuses' in value:
-                        print("Datos de estado recibidos:", value)
                         for status_info in value['statuses']:
                             msg_id = status_info['id']
                             status = status_info['status']
                             raw_timestamp = int(status_info['timestamp'])
                             timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC)
                             wa_id = status_info['recipient_id']
-                            print(f"Estado del mensaje {msg_id} para {wa_id}: {status} a las {timestamp}")
 
                             # Buscar mensaje por ID si lo tienes implementado con ID único
                             try:
@@ -483,13 +470,6 @@ def test_enviar_template(request):
         ]
 
         resultado = enviar_mensaje_template(wa_id, template_name, "es", components)
-
-        # Registrar mensaje saliente
-        # cliente, _ = WhatsAppClient.objects.get_or_create(wa_id=wa_id, defaults={"nombre": nombre})
-        # conversacion, _ = WhatsAppConversation.objects.get_or_create(
-        #     cliente=cliente, estado='activa', defaults={'inicio_conversacion': timezone.now()}
-        # )
-
        
 
         return JsonResponse(resultado)

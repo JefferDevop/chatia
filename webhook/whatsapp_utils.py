@@ -48,8 +48,6 @@ def enviar_mensaje_template(wa_id, template_name, language_code="es", components
     response = requests.post(url, headers=headers, json=payload)
     response_data = response.json()
     
-    print("➡️ Respuesta de WhatsApp API:", response_data)
-
     if response.status_code == 200:
         raw_timestamp = int(time.time())  # Unix timestamp
         timestamp = datetime.fromtimestamp(raw_timestamp, tz=pytz.UTC) 
