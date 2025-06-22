@@ -485,10 +485,10 @@ def test_enviar_template(request):
         resultado = enviar_mensaje_template(wa_id, template_name, "es", components)
 
         # Registrar mensaje saliente
-        cliente, _ = WhatsAppClient.objects.get_or_create(wa_id=wa_id, defaults={"nombre": nombre})
-        conversacion, _ = WhatsAppConversation.objects.get_or_create(
-            cliente=cliente, estado='activa', defaults={'inicio_conversacion': timezone.now()}
-        )
+        # cliente, _ = WhatsAppClient.objects.get_or_create(wa_id=wa_id, defaults={"nombre": nombre})
+        # conversacion, _ = WhatsAppConversation.objects.get_or_create(
+        #     cliente=cliente, estado='activa', defaults={'inicio_conversacion': timezone.now()}
+        # )
 
        
 
