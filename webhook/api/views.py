@@ -96,6 +96,8 @@ class WhatsAppWebhookAPIView(APIView):
                             defaults={"nombre": sender_name}
                         )
 
+                        print(f"Mensaje recibido de {wa_id}: {texto} a las {timestamp}")
+
                         # Obtener o crear conversación activa
                         conversacion, _ = WhatsAppConversation.objects.get_or_create(
                             cliente=cliente,
@@ -106,6 +108,7 @@ class WhatsAppWebhookAPIView(APIView):
                         # Crear mensaje
                         mensaje = WhatsAppMessage.objects.create(
                             conversacion=conversacion,
+                            message_id=message_data.get('id', 'unknown_id'),
                             tipo='entrante',
                             mensaje=texto,
                             timestamp=timestamp
