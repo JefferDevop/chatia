@@ -43,7 +43,6 @@ TENANT_APPS = (
     'channels',
     'webhook',
     'accounts',
-    'appAdmin',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + \

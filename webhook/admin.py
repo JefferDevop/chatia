@@ -1,18 +1,30 @@
 # admin.py
 from django.contrib import admin
-from .models import WhatsAppContact, WhatsAppMessage, WhatsAppMessageStatus
+from .models import WhatsAppClient, WhatsAppMessage, WhatsAppAgent, WhatsAppConversation, WhatsAppConversationAgent
 
-@admin.register(WhatsAppContact)
-class ContactAdmin(admin.ModelAdmin):
-    list_display = ('wa_id', 'nombre', 'last_interaction')
+@admin.register(WhatsAppClient)
+class ClientAdmin(admin.ModelAdmin):
+    list_display = ('wa_id', 'nombre')
 
 @admin.register(WhatsAppMessage)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ('wa_id', 'message_type', 'wa_timestamp', 'message_body')
+    list_display = ( 'conversacion', 'tipo', 'timestamp', 'mensaje', 'tiempo_respuesta', 'visto')
 
-@admin.register(WhatsAppMessageStatus)
-class StatusAdmin(admin.ModelAdmin):
-    list_display = ('wa_id', 'status', 'message_id', 'timestamp', 'conversation_id')
+@admin.register(WhatsAppAgent)
+class AgentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'nombre', 'disponible', 'email')
+
+
+@admin.register(WhatsAppConversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ( 'cliente', 'inicio_conversacion', 'fin_conversacion', 'estado')
+
+
+
+@admin.register(WhatsAppConversationAgent)
+class ConversationAgentAdmin(admin.ModelAdmin):
+    list_display = (  'conversacion', 'agente', 'asignado_en', 'activo')
+
 
 
 
