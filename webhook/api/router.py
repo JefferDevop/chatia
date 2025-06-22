@@ -14,8 +14,8 @@ router.register(r'conversation-agents', WhatsAppConversationAgentViewSet)
 router.register(r'messages', WhatsAppMessageViewSet)
 
 urlpatterns = [
-    path('api/webhook/', WhatsAppWebhookAPIView.as_view(), name='whatsapp-webhook'),
-    path('api/', include(router.urls)),
+    path('webhook/', WhatsAppWebhookAPIView.as_view(), name='whatsapp-webhook'),
+    path('', include(router.urls)),
     path('test/send-template/', test_enviar_template, name='test_send_template'),
 ]
 

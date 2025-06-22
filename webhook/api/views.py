@@ -59,7 +59,7 @@ class WhatsAppMessageViewSet(viewsets.ModelViewSet):
 
 
 
-
+@method_decorator(csrf_exempt, name='dispatch')
 class WhatsAppWebhookAPIView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
