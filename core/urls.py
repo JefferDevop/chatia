@@ -6,6 +6,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.conf import settings
 from django.conf.urls.static import static
+from django_prometheus import exports
 
 from accounts.api.router import router_user
 
@@ -35,6 +36,7 @@ urlpatterns = [
          cache_timeout=0), name='schema-swagger-ui'),
     path('redocs/', schema_view.with_ui('redoc',
          cache_timeout=0), name='schema-redoc'),
+    path("", include("django_prometheus.urls")),
 
 
     path('api/', include('accounts.api.router')),
