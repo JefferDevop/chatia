@@ -38,6 +38,15 @@ class MyAccountManager(BaseUserManager):
 
 
 class Account(AbstractBaseUser):
+
+    ROLES = (
+        ('admin', 'Administrador'),
+        ('agent', 'Agente'),
+    )
+
+    role = models.CharField(max_length=10, choices=ROLES, default='agent')
+
+
     first_name = models.CharField(
         max_length=50, blank=True, verbose_name=(u'Nombres'))
     last_name = models.CharField(

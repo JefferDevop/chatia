@@ -11,6 +11,8 @@ from django.utils.decorators import method_decorator
 from ..whatsapp_utils import enviar_mensaje_template
 from ..tasks import iniciar_verificacion_conversaciones
 
+from decouple import config
+
 
 from rest_framework import viewsets
 from ..models import WhatsAppClient, WhatsAppAgent, WhatsAppConversation, WhatsAppConversationAgent, WhatsAppMessage
@@ -59,7 +61,7 @@ class WhatsAppWebhookAPIView(APIView):
         token = request.GET.get('hub.verify_token')
         challenge = request.GET.get('hub.challenge')
 
-        if mode == 'subscribe' and token == 'demo':
+        if mode == 'subscribe' and token == config("WHATSAPP_VERIFY_TOKEN", default="demo"):
             return HttpResponse(challenge)
         return HttpResponse("Forbidden", status=403)
 
@@ -156,7 +158,7 @@ class WhatsAppWebhookAPIView(APIView):
                                     },
                                 )
                             except WhatsAppMessage.DoesNotExist:
-                                pass
+                                print(f"Mensaje con ID {msg_id} no encontrado")
 
             return JsonResponse({'status': 'ok'}, status=200)
 

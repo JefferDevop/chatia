@@ -2,10 +2,9 @@ from pathlib import Path
 import datetime
 import os
 import structlog
+import datetime
 
 import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 
 from decouple import config
 
@@ -46,6 +45,8 @@ TENANT_APPS = (
     'django_prometheus',
     'webhook',
     'accounts',
+    'metrics',
+    'notifications',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + \
@@ -156,12 +157,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.Account'
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True
-CARS_ALLOW_CREDENCIALS = True
+CORS_ALLOW_ALL_ORIGINS = True # Para desarrollo, luego restríngelo
+CORS_ALLOW_CREDENCIALS = True
 
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=100)
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=30),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
+
 }
 
 REST_FRAMEWORK = {
@@ -188,15 +191,17 @@ STATICFILES_DIRS = (
 # }
 
 
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Ejemplo con Redis como broker
-CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+
 
 CHANNEL_LAYERS = {
     "default": {
